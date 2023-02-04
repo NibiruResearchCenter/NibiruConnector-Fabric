@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "nibiru-connector",
+  "version": "${version}",
+  "name": "NibiruConnector",
+  "description": "Nibiru SMP external communication connector",
+  "authors": [
+    "Alisa"
+  ],
+  "contact": {
+    "website": "https://github.com/NibiruResearchCenter/NibiruConnector-Fabric",
+    "repo": "https://github.com/NibiruResearchCenter/NibiruConnector-Fabric"
+  },
+  "license": "MIT",
+  "icon": "assets/nibiru-connector/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      "alisalab.nibiruconnector.NibiruConnector"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.14.13",
+    "fabric": "*",
+    "minecraft": "1.19.3"
+  }
+}
