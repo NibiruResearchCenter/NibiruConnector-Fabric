@@ -1,4 +1,4 @@
-package alisalab.nibiruconnector;
+package moe.alisalab.nibiruconnector;
 
 import net.fabricmc.api.ModInitializer;
 

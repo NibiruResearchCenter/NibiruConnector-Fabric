@@ -17,7 +17,7 @@
   "accessWidener": "nibiru-connector.accesswidener",
   "entrypoints": {
     "main": [
-      "alisalab.nibiruconnector.NibiruConnector"
+      "moe.alisalab.nibiruconnector.NibiruConnector"
     ]
   },
   "depends": {

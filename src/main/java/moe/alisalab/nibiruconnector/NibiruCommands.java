@@ -1,6 +1,6 @@
-package alisalab.nibiruconnector;
+package moe.alisalab.nibiruconnector;
 
-import alisalab.nibiruconnector.commands.WhitelistCommand;
+import moe.alisalab.nibiruconnector.commands.WhitelistCommand;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import me.lucko.fabric.api.permissions.v0.Permissions;

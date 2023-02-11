@@ -1,4 +1,4 @@
-package alisalab.nibiruconnector.exceptions;
+package moe.alisalab.nibiruconnector.exceptions;
 
 public class LuckpermApiException extends Exception {
 

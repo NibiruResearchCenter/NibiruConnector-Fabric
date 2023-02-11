@@ -1,8 +1,8 @@
-package alisalab.nibiruconnector.commands;
+package moe.alisalab.nibiruconnector.commands;
 
-import alisalab.nibiruconnector.NibiruLogger;
-import alisalab.nibiruconnector.exceptions.LuckpermApiException;
-import alisalab.nibiruconnector.utils.LuckPermsApi;
+import moe.alisalab.nibiruconnector.NibiruLogger;
+import moe.alisalab.nibiruconnector.exceptions.LuckpermApiException;
+import moe.alisalab.nibiruconnector.utils.LuckPermsApi;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -12,7 +12,7 @@ import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.types.InheritanceNode;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
-import alisalab.nibiruconnector.utils.PlayerInfoUtils;
+import moe.alisalab.nibiruconnector.utils.PlayerInfoUtils;
 
 import java.util.*;
 

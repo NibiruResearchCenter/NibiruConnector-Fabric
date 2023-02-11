@@ -1,4 +1,4 @@
-package alisalab.nibiruconnector;
+package moe.alisalab.nibiruconnector;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

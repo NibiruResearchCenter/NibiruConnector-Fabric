@@ -1,4 +1,4 @@
-package alisalab.nibiruconnector.utils;
+package moe.alisalab.nibiruconnector.utils;
 
 import com.mojang.authlib.GameProfile;
 import net.minecraft.util.Uuids;

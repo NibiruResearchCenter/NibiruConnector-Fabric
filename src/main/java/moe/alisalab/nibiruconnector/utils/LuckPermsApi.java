@@ -1,6 +1,6 @@
-package alisalab.nibiruconnector.utils;
+package moe.alisalab.nibiruconnector.utils;
 
-import alisalab.nibiruconnector.exceptions.LuckpermApiException;
+import moe.alisalab.nibiruconnector.exceptions.LuckpermApiException;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.group.Group;
