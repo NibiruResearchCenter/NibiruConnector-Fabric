@@ -1,6 +1,7 @@
 package alisalab.nibiruconnector.commands;
 
-import alisalab.nibiruconnector.NibiruConnector;
+import alisalab.nibiruconnector.NibiruLogger;
+import alisalab.nibiruconnector.exceptions.LuckpermApiException;
 import alisalab.nibiruconnector.utils.LuckPermsApi;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -14,7 +15,6 @@ import net.minecraft.text.Text;
 import alisalab.nibiruconnector.utils.PlayerInfoUtils;
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 import static net.minecraft.server.dedicated.command.WhitelistCommand.executeAdd;
 import static net.minecraft.server.dedicated.command.WhitelistCommand.executeRemove;
@@ -29,9 +29,10 @@ public final class WhitelistCommand {
             throw new SimpleCommandExceptionType(Text.literal(String.format("Group %s does not exist.", group))).create();
         }
         var node = InheritanceNode.builder(LuckPermsApi.getGroup(group)).build();
-        NibiruConnector.LOGGER.info(String.format("[NBR|DBG] Group inheritance node: %s", node.getKey()));
+        NibiruLogger.debug("WL-ADD Group inheritance node: %s", node.getKey());
 
         var profile = PlayerInfoUtils.getGameProfile(player);
+        NibiruLogger.debug("WL-ADD Get player uuid %s(%s)", profile.getName(), profile.getId().toString());
 
         var isWhitelisted = source.getServer().getPlayerManager().isWhitelisted(profile);
         if (isWhitelisted) {
@@ -40,34 +41,32 @@ public final class WhitelistCommand {
 
         var lpUser = (User) null;
         try {
-            lpUser = LuckPermsApi.getUser(profile.getId()).get();
-        } catch (InterruptedException e) {
-            throw new SimpleCommandExceptionType(Text.literal("Luckperm user load has been interrupted.")).create();
-        } catch (ExecutionException e) {
-            throw new SimpleCommandExceptionType(Text.literal("An exception has been threw in luckperm user load process.")).create();
+            lpUser = LuckPermsApi.getUser(profile.getId());
+        } catch (LuckpermApiException e) {
+            throw new SimpleCommandExceptionType(Text.literal(e.reason)).create();
         }
         if (lpUser == null) {
-            throw new SimpleCommandExceptionType(Text.literal(String.format("Luckperm could not find user metadata of username %s.", player))).create();
+            throw new SimpleCommandExceptionType(Text.literal(String.format("Luckperm could not find user metadata of player %s.", player))).create();
         }
+
+        NibiruLogger.debug("WL-ADD Get Luckperms user with name %s", lpUser.getUsername());
 
         executeAdd(source, Collections.singletonList(profile));
 
-        var nodes = lpUser.getNodes();
-        NibiruConnector.LOGGER.info("[NBR|DBG] Whitelist ADD - LP USER - " + lpUser.getUsername());
-        for (var n : nodes) {
-            NibiruConnector.LOGGER.info("[NBR|DBG] Whitelist ADD - LP USER NODES - " + n.getKey());
-        }
-
         if (!lpUser.getNodes().contains(node)) {
             var result = lpUser.data().add(node);
-            NibiruConnector.LOGGER.info(String.format("[NBR|INF] %s add node %s result: %s.", player, node.getKey(), result.wasSuccessful() ? "OK" : "FAIL"));
+            if (!result.wasSuccessful()) {
+                NibiruLogger.warn("Failed to add node %s to player %s", node.getKey(), player);
+                throw new SimpleCommandExceptionType(Text.literal(result.name())).create();
+            }
             LuckPermsApi.saveUser(lpUser);
-            NibiruConnector.LOGGER.info(String.format("[NBR|INF] %s has the primary group set to %s.", player, group));
+            NibiruLogger.info("Add %s node to player %s.", node.getKey(), player);
         }
         else {
-            NibiruConnector.LOGGER.info(String.format("[NBR|INF] %s already in the group %s.", player, group));
+            NibiruLogger.debug("WL-ADD Player %s already has the node %s", player, node.getKey());
         }
 
+        source.sendMessage(Text.literal(String.format("[NBR] Player %s has been added to whitelist and has the node %s.", player, node.getKey())));
         return Command.SINGLE_SUCCESS;
     }
 
@@ -76,6 +75,7 @@ public final class WhitelistCommand {
         var player = StringArgumentType.getString(ctx, "player");
 
         var profile = PlayerInfoUtils.getGameProfile(player);
+        NibiruLogger.debug("WL-REMOVE Get player uuid %s(%s)", profile.getName(), profile.getId().toString());
 
         var isWhitelisted = source.getServer().getPlayerManager().isWhitelisted(profile);
         if (!isWhitelisted) {
@@ -84,6 +84,7 @@ public final class WhitelistCommand {
 
         executeRemove(source, Collections.singletonList(profile));
 
+        source.sendMessage(Text.literal(String.format("[NBR] Player %s has been removed from whitelist.", player)));
         return Command.SINGLE_SUCCESS;
     }
 
@@ -94,27 +95,26 @@ public final class WhitelistCommand {
 
         var lpUsers = (Set<UUID>)new HashSet<UUID>();
         try {
-            lpUsers = LuckPermsApi.getAllUsers().get();
-        } catch (InterruptedException e) {
-            throw new SimpleCommandExceptionType(Text.literal("Luckperm user query has been interrupted.")).create();
-        } catch (ExecutionException e) {
-            throw new SimpleCommandExceptionType(Text.literal("An exception has been threw in luckperm user query process.")).create();
+            lpUsers = LuckPermsApi.getAllUsers();
+        } catch (LuckpermApiException e) {
+            throw new SimpleCommandExceptionType(Text.literal(e.reason)).create();
         }
+        NibiruLogger.debug("WL-LIST Load all lp users, total count: %s", Integer.toString(lpUsers.size()));
 
         var playerList = new HashMap<String, HashSet<String>>();
 
         for (var name: whitelistedNames) {
             var profile = PlayerInfoUtils.getGameProfile(name);
             var lpContains = lpUsers.contains(profile.getId());
+            NibiruLogger.debug("WL-LIST Player %s(%s) in lp: %s", profile.getName(), profile.getId().toString(), lpContains ? "true" : "false");
 
             var group = "unknown";
             if (lpContains) {
                 try {
                     group = LuckPermsApi.getUserGroup(profile.getId());
-                } catch (InterruptedException e) {
-                    throw new SimpleCommandExceptionType(Text.literal("Luckperm user query has been interrupted.")).create();
-                } catch (ExecutionException e) {
-                    throw new SimpleCommandExceptionType(Text.literal("An exception has been threw in luckperm user query process.")).create();
+                    NibiruLogger.debug("WL-LIST Get user %s primary group %s", profile.getName(), group);
+                } catch (LuckpermApiException e) {
+                    throw new SimpleCommandExceptionType(Text.literal(e.reason)).create();
                 }
             }
 

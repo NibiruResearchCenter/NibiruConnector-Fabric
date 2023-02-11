@@ -1,5 +1,6 @@
 package alisalab.nibiruconnector.utils;
 
+import alisalab.nibiruconnector.exceptions.LuckpermApiException;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.group.Group;
@@ -7,22 +8,29 @@ import net.luckperms.api.model.user.User;
 
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public final class LuckPermsApi {
     public static LuckPerms API = LuckPermsProvider.get();
 
-    public static CompletableFuture<User> getUser(UUID uuid) {
-        return API.getUserManager().loadUser(uuid);
+    public static User getUser(UUID uuid) throws LuckpermApiException {
+        try {
+            return API.getUserManager().loadUser(uuid).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new LuckpermApiException(e.getMessage());
+        }
     }
 
-    public static String getUserGroup(UUID uuid) throws ExecutionException, InterruptedException {
-        return getUser(uuid).get().getPrimaryGroup();
+    public static String getUserGroup(UUID uuid) throws LuckpermApiException {
+        return getUser(uuid).getPrimaryGroup();
     }
 
-    public static CompletableFuture<Set<UUID>> getAllUsers() {
-        return API.getUserManager().getUniqueUsers();
+    public static Set<UUID> getAllUsers() throws LuckpermApiException {
+        try {
+            return API.getUserManager().getUniqueUsers().get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new LuckpermApiException(e.getMessage());
+        }
     }
 
     public static Group getGroup(String groupName) {
