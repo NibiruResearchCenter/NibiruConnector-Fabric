@@ -16,6 +16,18 @@ repositories {
         url "https://maven.nucleoid.xyz/"
         name "Nucleoid"
     }
+
+    mavenCentral()
+
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots"
+        name "Sonatype OSS"
+    }
+}
+
+
+loom {
+    accessWidenerPath = file("src/main/resources/nibiru-connector.accesswidener")
 }
 
 dependencies {
@@ -26,6 +38,12 @@ dependencies {
 
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // Luckperm API
+    compileOnly 'net.luckperms:api:5.4'
+
+    // Included APIs
+    modImplementation include('me.lucko:fabric-permissions-api:0.2-SNAPSHOT')
     modImplementation include("eu.pb4:placeholder-api:2.0.0-pre.3+1.19.3")
 }
 

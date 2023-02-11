@@ -14,6 +14,7 @@
   "license": "MIT",
   "icon": "assets/nibiru-connector/icon.png",
   "environment": "server",
+  "accessWidener": "nibiru-connector.accesswidener",
   "entrypoints": {
     "main": [
       "alisalab.nibiruconnector.NibiruConnector"
@@ -22,6 +23,7 @@
   "depends": {
     "fabricloader": ">=0.14.13",
     "fabric": "*",
-    "minecraft": "1.19.3"
+    "minecraft": "1.19.3",
+    "luckperms": "*"
   }
 }
