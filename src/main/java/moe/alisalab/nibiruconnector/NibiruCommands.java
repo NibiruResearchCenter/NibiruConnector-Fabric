@@ -4,6 +4,7 @@ import moe.alisalab.nibiruconnector.commands.WhitelistCommand;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import me.lucko.fabric.api.permissions.v0.Permissions;
+import moe.alisalab.nibiruconnector.commands.suggestion.LuckpermsGroupSuggestion;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -35,6 +36,7 @@ public final class NibiruCommands {
                         CommandManager.argument("player", StringArgumentType.word())
                                 .then(
                                         CommandManager.argument("group", StringArgumentType.word())
+                                                .suggests(new LuckpermsGroupSuggestion())
                                                 .executes(WhitelistCommand::addPlayer)
                                 )
                 )
