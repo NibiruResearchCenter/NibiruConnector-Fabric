@@ -9,10 +9,10 @@ import java.util.List;
 public class WhitelistListResponse {
 
     @JSONField(name = "timestamp")
-    private long Timestamp;
+    public long Timestamp;
 
     @JSONField(name = "playerGroups")
-    private List<WhitelistListPlayerGroup> PlayerGroups;
+    public List<WhitelistListPlayerGroup> PlayerGroups;
 
     public WhitelistListResponse() {
         Timestamp = new Timestamp(System.currentTimeMillis()).getTime();
@@ -21,21 +21,5 @@ public class WhitelistListResponse {
 
     public void addPlayerGroup(WhitelistListPlayerGroup pg) {
         PlayerGroups.add(pg);
-    }
-
-    public long getTimestamp() {
-        return Timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        Timestamp = timestamp;
-    }
-
-    public List<WhitelistListPlayerGroup> getPlayerList() {
-        return PlayerGroups;
-    }
-
-    public void setPlayerList(List<WhitelistListPlayerGroup> playerList) {
-        PlayerGroups = playerList;
     }
 }

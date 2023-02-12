@@ -7,29 +7,13 @@ import java.sql.Timestamp;
 public class GeneralCommandResponse {
 
     @JSONField(name = "timestamp")
-    private long Timestamp;
+    public long Timestamp;
 
     @JSONField(name = "message")
-    private String Message;
+    public String Message;
 
     public GeneralCommandResponse(String message) {
         Message = message;
         Timestamp = new Timestamp(System.currentTimeMillis()).getTime();
-    }
-
-    public long getTimestamp() {
-        return Timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        Timestamp = timestamp;
-    }
-
-    public String getMessage() {
-        return Message;
-    }
-
-    public void setMessage(String message) {
-        Message = message;
     }
 }

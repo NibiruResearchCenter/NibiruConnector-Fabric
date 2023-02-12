@@ -8,10 +8,10 @@ import java.util.List;
 public class WhitelistListPlayerGroup {
 
     @JSONField(name = "groupName")
-    private String GroupName;
+    public String GroupName;
 
     @JSONField(name = "players")
-    private List<String> Players;
+    public List<String> Players;
 
     public WhitelistListPlayerGroup(String groupName) {
         GroupName = groupName;
@@ -20,21 +20,5 @@ public class WhitelistListPlayerGroup {
 
     public void addPlayer(String player) {
         Players.add(player);
-    }
-
-    public String getGroupName() {
-        return GroupName;
-    }
-
-    public void setGroupName(String groupName) {
-        GroupName = groupName;
-    }
-
-    public List<String> getPlayers() {
-        return Players;
-    }
-
-    public void setPlayers(List<String> players) {
-        Players = players;
     }
 }
