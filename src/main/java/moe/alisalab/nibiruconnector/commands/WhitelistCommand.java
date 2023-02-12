@@ -1,9 +1,6 @@
 package moe.alisalab.nibiruconnector.commands;
 
 import com.alibaba.fastjson2.JSON;
-import com.mojang.authlib.Agent;
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.ProfileLookupCallback;
 import moe.alisalab.nibiruconnector.NibiruLogger;
 import moe.alisalab.nibiruconnector.exceptions.LuckpermApiException;
 import moe.alisalab.nibiruconnector.models.GeneralCommandResponse;
@@ -15,6 +12,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import moe.alisalab.nibiruconnector.utils.WhitelistUtils;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.types.InheritanceNode;
 import net.minecraft.command.argument.GameProfileArgumentType;
@@ -123,8 +121,6 @@ public final class WhitelistCommand {
         var source = ctx.getSource();
         var isConsole = isFromConsole(ctx);
 
-        var whitelistedNames = source.getServer().getPlayerManager().getWhitelistedNames();
-
         var lpUsers = (Set<UUID>)new HashSet<UUID>();
         try {
             lpUsers = LuckPermsApi.getAllUsers();
@@ -135,24 +131,10 @@ public final class WhitelistCommand {
 
         var playerList = new HashMap<String, HashSet<String>>();
 
-        class ProfileCallback implements ProfileLookupCallback {
-            public final List<GameProfile> profiles = new ArrayList<>();
+        var whitelistFile = source.getServer().getPlayerManager().getWhitelist().getFile();
+        var profiles = WhitelistUtils.getWhitelistProfiles(whitelistFile);
 
-            @Override
-            public void onProfileLookupSucceeded(GameProfile profile) {
-                this.profiles.add(profile);
-            }
-
-            @Override
-            public void onProfileLookupFailed(GameProfile profile, Exception exception) {
-                NibiruLogger.warn("WL-LIST Failed to lookup profile for %s", profile.getName());
-            }
-        }
-
-        var callback = new ProfileCallback();
-        source.getServer().getGameProfileRepo().findProfilesByNames(whitelistedNames, Agent.MINECRAFT, callback);
-
-        for (var profile: callback.profiles) {
+        for (var profile: profiles) {
             var lpContains = lpUsers.contains(profile.getId());
             NibiruLogger.debug("WL-LIST Player %s(%s) in lp: %s", profile.getName(), profile.getId().toString(), lpContains ? "true" : "false");
 
