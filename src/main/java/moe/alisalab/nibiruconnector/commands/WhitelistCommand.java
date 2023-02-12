@@ -1,6 +1,9 @@
 package moe.alisalab.nibiruconnector.commands;
 
 import com.alibaba.fastjson2.JSON;
+import com.mojang.authlib.Agent;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.ProfileLookupCallback;
 import moe.alisalab.nibiruconnector.NibiruLogger;
 import moe.alisalab.nibiruconnector.exceptions.LuckpermApiException;
 import moe.alisalab.nibiruconnector.models.GeneralCommandResponse;
@@ -14,10 +17,10 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.types.InheritanceNode;
+import net.minecraft.command.argument.GameProfileArgumentType;
 import net.minecraft.server.WhitelistEntry;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
-import moe.alisalab.nibiruconnector.utils.PlayerInfoUtils;
 
 import java.util.*;
 
@@ -26,9 +29,12 @@ import static moe.alisalab.nibiruconnector.utils.CommandUtils.isFromConsole;
 public final class WhitelistCommand {
     public static int addPlayer(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
         var source = ctx.getSource();
-        var player = StringArgumentType.getString(ctx, "player");
+        var profile = GameProfileArgumentType.getProfileArgument(ctx, "player").iterator().next();
+        var player = profile.getName();
         var group = StringArgumentType.getString(ctx, "group");
         var isConsole = isFromConsole(ctx);
+
+        source.getServer().getPlayerManager().getPlayer("");
 
         if (group.equals("default")) {
             throw new SimpleCommandExceptionType(Text.literal("Group could not be default.")).create();
@@ -38,9 +44,6 @@ public final class WhitelistCommand {
         }
         var node = InheritanceNode.builder(LuckPermsApi.getGroup(group)).build();
         NibiruLogger.debug("WL-ADD Group inheritance node: %s", node.getKey());
-
-        var profile = PlayerInfoUtils.getGameProfile(player);
-        NibiruLogger.debug("WL-ADD Get player uuid %s(%s)", profile.getName(), profile.getId().toString());
 
         var isWhitelisted = source.getServer().getPlayerManager().isWhitelisted(profile);
         if (isWhitelisted) {
@@ -90,11 +93,9 @@ public final class WhitelistCommand {
 
     public static int removePlayer(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
         var source = ctx.getSource();
-        var player = StringArgumentType.getString(ctx, "player");
+        var profile = GameProfileArgumentType.getProfileArgument(ctx, "player").iterator().next();
+        var player = profile.getName();
         var isConsole = isFromConsole(ctx);
-
-        var profile = PlayerInfoUtils.getGameProfile(player);
-        NibiruLogger.debug("WL-REMOVE Get player uuid %s(%s)", profile.getName(), profile.getId().toString());
 
         var isWhitelisted = source.getServer().getPlayerManager().isWhitelisted(profile);
         if (!isWhitelisted) {
@@ -134,8 +135,24 @@ public final class WhitelistCommand {
 
         var playerList = new HashMap<String, HashSet<String>>();
 
-        for (var name: whitelistedNames) {
-            var profile = PlayerInfoUtils.getGameProfile(name);
+        class ProfileCallback implements ProfileLookupCallback {
+            public final List<GameProfile> profiles = new ArrayList<>();
+
+            @Override
+            public void onProfileLookupSucceeded(GameProfile profile) {
+                this.profiles.add(profile);
+            }
+
+            @Override
+            public void onProfileLookupFailed(GameProfile profile, Exception exception) {
+                NibiruLogger.warn("WL-LIST Failed to lookup profile for %s", profile.getName());
+            }
+        }
+
+        var callback = new ProfileCallback();
+        source.getServer().getGameProfileRepo().findProfilesByNames(whitelistedNames, Agent.MINECRAFT, callback);
+
+        for (var profile: callback.profiles) {
             var lpContains = lpUsers.contains(profile.getId());
             NibiruLogger.debug("WL-LIST Player %s(%s) in lp: %s", profile.getName(), profile.getId().toString(), lpContains ? "true" : "false");
 

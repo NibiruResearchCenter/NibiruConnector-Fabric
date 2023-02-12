@@ -7,6 +7,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import moe.alisalab.nibiruconnector.commands.suggestion.LuckpermsGroupSuggestion;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.command.argument.GameProfileArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 
@@ -41,7 +42,7 @@ public final class NibiruCommands {
                 .literal("add")
                 .requires(Permissions.require("nibiru-connector.command.whitelist.add", 4))
                 .then(
-                        CommandManager.argument("player", StringArgumentType.word())
+                        CommandManager.argument("player", GameProfileArgumentType.gameProfile())
                                 .then(
                                         CommandManager.argument("group", StringArgumentType.word())
                                                 .suggests(new LuckpermsGroupSuggestion())
@@ -54,7 +55,7 @@ public final class NibiruCommands {
                 .literal("remove")
                 .requires(Permissions.require("nibiru-connector.command.whitelist.remove", 4))
                 .then(
-                        CommandManager.argument("player", StringArgumentType.word())
+                        CommandManager.argument("player", GameProfileArgumentType.gameProfile())
                                 .executes(WhitelistCommand::removePlayer)
                 )
                 .build();
