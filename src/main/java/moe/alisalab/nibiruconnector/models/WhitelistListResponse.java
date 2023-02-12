@@ -11,16 +11,16 @@ public class WhitelistListResponse {
     @JSONField(name = "timestamp")
     private long Timestamp;
 
-    @JSONField(name = "playerGroup")
-    private List<WhitelistListPlayerGroup> PlayerGroup;
+    @JSONField(name = "playerGroups")
+    private List<WhitelistListPlayerGroup> PlayerGroups;
 
     public WhitelistListResponse() {
         Timestamp = new Timestamp(System.currentTimeMillis()).getTime();
-        PlayerGroup = new ArrayList<>();
+        PlayerGroups = new ArrayList<>();
     }
 
     public void addPlayerGroup(WhitelistListPlayerGroup pg) {
-        PlayerGroup.add(pg);
+        PlayerGroups.add(pg);
     }
 
     public long getTimestamp() {
@@ -32,10 +32,10 @@ public class WhitelistListResponse {
     }
 
     public List<WhitelistListPlayerGroup> getPlayerList() {
-        return PlayerGroup;
+        return PlayerGroups;
     }
 
     public void setPlayerList(List<WhitelistListPlayerGroup> playerList) {
-        PlayerGroup = playerList;
+        PlayerGroups = playerList;
     }
 }
