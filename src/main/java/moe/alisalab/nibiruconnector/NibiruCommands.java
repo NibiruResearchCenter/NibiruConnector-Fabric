@@ -1,5 +1,6 @@
 package moe.alisalab.nibiruconnector;
 
+import moe.alisalab.nibiruconnector.commands.FetchCommand;
 import moe.alisalab.nibiruconnector.commands.WhitelistCommand;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
@@ -27,6 +28,7 @@ public final class NibiruCommands {
         });
 
         addWhitelistCommand(nibiruNode);
+        addFetchCommand(nibiruNode);
     }
 
     private static void addWhitelistCommand(LiteralCommandNode<ServerCommandSource> nibiruNode) {
@@ -69,6 +71,25 @@ public final class NibiruCommands {
             whitelistNode.addChild(whitelistAddNode);
             whitelistNode.addChild(whitelistRemoveNode);
             whitelistNode.addChild(whitelistListNode);
+        });
+    }
+
+    private static void addFetchCommand(LiteralCommandNode<ServerCommandSource> nibiruNode) {
+        var fetchNode = CommandManager
+                .literal("fetch")
+                .requires(Permissions.require("nibiru-connector.command.fetch", 4))
+                .build();
+
+        var fetchGroupNode = CommandManager
+                .literal("groups")
+                .requires(Permissions.require("nibiru-connector.command.fetch.group", 4))
+                .executes(FetchCommand::getAllGroups)
+                .build();
+
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            nibiruNode.addChild(fetchNode);
+
+            fetchNode.addChild(fetchGroupNode);
         });
     }
 }
