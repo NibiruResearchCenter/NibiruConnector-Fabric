@@ -30,6 +30,9 @@ public final class WhitelistCommand {
         var group = StringArgumentType.getString(ctx, "group");
         var isConsole = isFromConsole(ctx);
 
+        if (group.equals("default")) {
+            throw new SimpleCommandExceptionType(Text.literal("Group could not be default.")).create();
+        }
         if (!LuckPermsApi.isGroupExist(group)) {
             throw new SimpleCommandExceptionType(Text.literal(String.format("Group %s does not exist.", group))).create();
         }

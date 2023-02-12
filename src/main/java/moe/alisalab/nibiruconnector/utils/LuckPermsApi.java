@@ -38,7 +38,10 @@ public final class LuckPermsApi {
     }
 
     public static Set<Group> getAllGroups() {
-        return API.getGroupManager().getLoadedGroups();
+        return Set.copyOf(API.getGroupManager().getLoadedGroups()
+                .stream()
+                .filter(g -> !g.getName().equals("default"))
+                .toList());
     }
 
     public static boolean isGroupExist(String group) {
