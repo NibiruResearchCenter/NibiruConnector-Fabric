@@ -1,7 +1,11 @@
 package moe.alisalab.nibiruconnector.commands;
 
+import com.alibaba.fastjson2.JSON;
 import moe.alisalab.nibiruconnector.NibiruLogger;
 import moe.alisalab.nibiruconnector.exceptions.LuckpermApiException;
+import moe.alisalab.nibiruconnector.models.GeneralCommandResponse;
+import moe.alisalab.nibiruconnector.models.WhitelistListPlayerGroup;
+import moe.alisalab.nibiruconnector.models.WhitelistListResponse;
 import moe.alisalab.nibiruconnector.utils.LuckPermsApi;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -10,20 +14,21 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.types.InheritanceNode;
+import net.minecraft.server.WhitelistEntry;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import moe.alisalab.nibiruconnector.utils.PlayerInfoUtils;
 
 import java.util.*;
 
-import static net.minecraft.server.dedicated.command.WhitelistCommand.executeAdd;
-import static net.minecraft.server.dedicated.command.WhitelistCommand.executeRemove;
+import static moe.alisalab.nibiruconnector.utils.CommandUtils.isFromConsole;
 
 public final class WhitelistCommand {
     public static int addPlayer(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
         var source = ctx.getSource();
         var player = StringArgumentType.getString(ctx, "player");
         var group = StringArgumentType.getString(ctx, "group");
+        var isConsole = isFromConsole(ctx);
 
         if (!LuckPermsApi.isGroupExist(group)) {
             throw new SimpleCommandExceptionType(Text.literal(String.format("Group %s does not exist.", group))).create();
@@ -51,7 +56,10 @@ public final class WhitelistCommand {
 
         NibiruLogger.debug("WL-ADD Get Luckperms user with name %s", lpUser.getUsername());
 
-        executeAdd(source, Collections.singletonList(profile));
+        var whitelist = source.getServer().getPlayerManager().getWhitelist();
+        if (!whitelist.isAllowed(profile)) {
+            whitelist.add(new WhitelistEntry(profile));
+        }
 
         if (!lpUser.getNodes().contains(node)) {
             var result = lpUser.data().add(node);
@@ -66,13 +74,21 @@ public final class WhitelistCommand {
             NibiruLogger.debug("WL-ADD Player %s already has the node %s", player, node.getKey());
         }
 
-        source.sendMessage(Text.literal(String.format("[NBR] Player %s has been added to whitelist and has the node %s.", player, node.getKey())));
+        if (isConsole) {
+            var response = new GeneralCommandResponse(String.format("Player %s has been added to whitelist and LP group %s.", player, group));
+            var responseJson = JSON.toJSONString(response);
+            source.sendFeedback(Text.literal(responseJson), true);
+        }
+        else {
+            source.sendFeedback(Text.literal(String.format("[NBR] Player %s has been added to whitelist and has the node %s.", player, node.getKey())), true);
+        }
         return Command.SINGLE_SUCCESS;
     }
 
     public static int removePlayer(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
         var source = ctx.getSource();
         var player = StringArgumentType.getString(ctx, "player");
+        var isConsole = isFromConsole(ctx);
 
         var profile = PlayerInfoUtils.getGameProfile(player);
         NibiruLogger.debug("WL-REMOVE Get player uuid %s(%s)", profile.getName(), profile.getId().toString());
@@ -82,14 +98,26 @@ public final class WhitelistCommand {
             throw new SimpleCommandExceptionType(Text.literal(String.format("Player %s is not in the whitelist.", player))).create();
         }
 
-        executeRemove(source, Collections.singletonList(profile));
+        var whitelist = source.getServer().getPlayerManager().getWhitelist();
+        if (whitelist.isAllowed(profile)) {
+            whitelist.remove(profile);
+        }
+        source.getServer().kickNonWhitelistedPlayers(source);
 
-        source.sendMessage(Text.literal(String.format("[NBR] Player %s has been removed from whitelist.", player)));
+        if (isConsole) {
+            var response = new GeneralCommandResponse(String.format("Player %s has been removed from whitelist.", player));
+            var responseJson = JSON.toJSONString(response);
+            source.sendFeedback(Text.literal(responseJson), true);
+        }
+        else {
+            source.sendMessage(Text.literal(String.format("[NBR] Player %s has been removed from whitelist.", player)));
+        }
         return Command.SINGLE_SUCCESS;
     }
 
     public static int listPlayer(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
         var source = ctx.getSource();
+        var isConsole = isFromConsole(ctx);
 
         var whitelistedNames = source.getServer().getPlayerManager().getWhitelistedNames();
 
@@ -125,21 +153,39 @@ public final class WhitelistCommand {
             playerList.get(group).add(profile.getName());
         }
 
-        var sb = new StringBuilder();
-        var groups = playerList.keySet();
-        for (var g: groups) {
-            sb.append(String.format("§6[%s]:§r", g));
-            for (var p: playerList.get(g)) {
-                sb.append(p);
-                sb.append(';');
+        if (isConsole) {
+            var response = new WhitelistListResponse();
+            var groups = playerList.keySet();
+            for (var g: groups) {
+                var r = new WhitelistListPlayerGroup(g);
+                for (var p: playerList.get(g)) {
+                    r.addPlayer(p);
+                }
+                response.addPlayerGroup(r);
+            }
+
+            var responseJson = JSON.toJSONString(response);
+            source.sendFeedback(Text.literal(responseJson), false);
+        }
+        else {
+            var sb = new StringBuilder();
+            var groups = playerList.keySet();
+            for (var g: groups) {
+                sb.append(String.format("§6[%s]:§r", g));
+                for (var p: playerList.get(g)) {
+                    sb.append(p);
+                    sb.append(';');
+                    sb.append(' ');
+                }
+                sb.deleteCharAt(sb.length() - 1);
+                sb.deleteCharAt(sb.length() - 1);
+                sb.append(' ');
             }
             sb.deleteCharAt(sb.length() - 1);
-            sb.append('|');
-        }
-        sb.deleteCharAt(sb.length() - 1);
 
-        var msg = sb.toString();
-        source.sendMessage(Text.literal(msg));
+            var msg = sb.toString();
+            source.sendFeedback(Text.literal(msg), false);
+        }
 
         return Command.SINGLE_SUCCESS;
     }

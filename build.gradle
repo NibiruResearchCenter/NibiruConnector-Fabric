@@ -21,11 +21,6 @@ repositories {
     }
 }
 
-
-loom {
-    accessWidenerPath = file("src/main/resources/nibiru-connector.accesswidener")
-}
-
 dependencies {
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -40,6 +35,9 @@ dependencies {
 
     // Included APIs
     modImplementation include('me.lucko:fabric-permissions-api:0.2-SNAPSHOT')
+
+    // FastJSON
+    implementation include('com.alibaba.fastjson2:fastjson2:2.0.23')
 }
 
 processResources {

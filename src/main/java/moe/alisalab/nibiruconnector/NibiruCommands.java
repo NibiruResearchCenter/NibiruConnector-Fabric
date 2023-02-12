@@ -16,9 +16,15 @@ public final class NibiruCommands {
                 .literal("nibiru")
                 .requires(Permissions.require("nibiru-connector.command", 4))
                 .build();
+        var nibiruConsoleNode = CommandManager
+                .literal("nibiruc")
+                .redirect(nibiruNode)
+                .build();
 
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
-                dispatcher.getRoot().addChild(nibiruNode));
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            dispatcher.getRoot().addChild(nibiruNode);
+            dispatcher.getRoot().addChild(nibiruConsoleNode);
+        });
 
         addWhitelistCommand(nibiruNode);
     }
