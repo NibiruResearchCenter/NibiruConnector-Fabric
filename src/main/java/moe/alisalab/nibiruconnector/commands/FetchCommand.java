@@ -3,11 +3,13 @@ package moe.alisalab.nibiruconnector.commands;
 import com.alibaba.fastjson2.JSON;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
-import moe.alisalab.nibiruconnector.models.GetGroupResponse;
+import moe.alisalab.nibiruconnector.models.GroupedStringResponse;
 import moe.alisalab.nibiruconnector.utils.LuckPermsApi;
 import net.luckperms.api.model.group.Group;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
+
+import java.util.List;
 
 import static moe.alisalab.nibiruconnector.utils.CommandUtils.isFromConsole;
 
@@ -22,14 +24,27 @@ public final class FetchCommand {
                 .toList();
 
 
+        return response(source, isConsole, groups, "Groups");
+    }
+
+    public static int getAllWhitelistedPlayers(CommandContext<ServerCommandSource> ctx) {
+        var source = ctx.getSource();
+        var isConsole = isFromConsole(ctx);
+
+        var players = List.of(source.getServer().getPlayerManager().getWhitelistedNames());
+
+        return response(source, isConsole, players, "Whitelisted players");
+    }
+
+    private static int response(ServerCommandSource source, boolean isConsole, List<String> groups, String title) {
         if (isConsole) {
-            var response = new GetGroupResponse(groups);
+            var response = new GroupedStringResponse(groups);
             var responseJson = JSON.toJSONString(response);
-            source.sendFeedback(Text.literal(responseJson), true);
+            source.sendFeedback(Text.literal(responseJson), false);
         }
         else {
-            var groupString = String.join(", ", groups);
-            source.sendFeedback(Text.literal(String.format("Groups: %s", groupString)), false);
+            var groupedString = String.join(", ", groups);
+            source.sendFeedback(Text.literal(String.format("%s: %s", title, groupedString)), false);
         }
 
         return Command.SINGLE_SUCCESS;

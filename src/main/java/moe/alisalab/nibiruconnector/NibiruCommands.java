@@ -88,10 +88,17 @@ public final class NibiruCommands {
                 .executes(FetchCommand::getAllGroups)
                 .build();
 
+        var fetchWhitelistedPlayerNode = CommandManager
+                .literal("whitelisted")
+                .requires(Permissions.require("nibiru-connector.command.fetch.whitelisted", 4))
+                .executes(FetchCommand::getAllWhitelistedPlayers)
+                .build();
+
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             nibiruNode.addChild(fetchNode);
 
             fetchNode.addChild(fetchGroupNode);
+            fetchNode.addChild(fetchWhitelistedPlayerNode);
         });
     }
 }
