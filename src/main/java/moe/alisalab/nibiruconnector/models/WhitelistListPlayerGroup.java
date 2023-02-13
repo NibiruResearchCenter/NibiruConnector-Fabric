@@ -11,14 +11,14 @@ public class WhitelistListPlayerGroup {
     public String GroupName;
 
     @JSONField(name = "players")
-    public List<String> Players;
+    public List<WhitelistListPlayer> Players;
 
     public WhitelistListPlayerGroup(String groupName) {
         GroupName = groupName;
         Players = new ArrayList<>();
     }
 
-    public void addPlayer(String player) {
-        Players.add(player);
+    public void addPlayer(WhitelistListPlayer wlp) {
+        Players.add(wlp);
     }
 }

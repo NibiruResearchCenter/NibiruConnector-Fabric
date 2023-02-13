@@ -1,9 +1,13 @@
 package moe.alisalab.nibiruconnector.commands;
 
 import com.alibaba.fastjson2.JSON;
+import com.github.quiltservertools.ledger.utility.PlayerResult;
+import com.mojang.authlib.GameProfile;
+import moe.alisalab.nibiruconnector.NibiruConnectKotlin;
 import moe.alisalab.nibiruconnector.NibiruLogger;
 import moe.alisalab.nibiruconnector.exceptions.LuckpermApiException;
 import moe.alisalab.nibiruconnector.models.GeneralCommandResponse;
+import moe.alisalab.nibiruconnector.models.WhitelistListPlayer;
 import moe.alisalab.nibiruconnector.models.WhitelistListPlayerGroup;
 import moe.alisalab.nibiruconnector.models.WhitelistListResponse;
 import moe.alisalab.nibiruconnector.utils.LuckPermsApi;
@@ -20,7 +24,10 @@ import net.minecraft.server.WhitelistEntry;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 import static moe.alisalab.nibiruconnector.utils.CommandUtils.isFromConsole;
 
@@ -129,10 +136,18 @@ public final class WhitelistCommand {
         }
         NibiruLogger.debug("WL-LIST Load all lp users, total count: %s", Integer.toString(lpUsers.size()));
 
-        var playerList = new HashMap<String, HashSet<String>>();
+        var playerList = new HashMap<String, HashSet<GameProfile>>();
 
         var whitelistFile = source.getServer().getPlayerManager().getWhitelist().getFile();
         var profiles = WhitelistUtils.getWhitelistProfiles(whitelistFile);
+
+        var playerQueryFuture = NibiruConnectKotlin.getLedgerQueryApi().queryPlayers(new HashSet<>(profiles));
+        var playerQueryResult = (List<PlayerResult>) null;
+        try {
+            playerQueryResult = playerQueryFuture.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new SimpleCommandExceptionType(Text.literal(String.format("Failed to query Ledger Database. Message: %s", e.getMessage()))).create();
+        }
 
         for (var profile: profiles) {
             var lpContains = lpUsers.contains(profile.getId());
@@ -152,7 +167,7 @@ public final class WhitelistCommand {
                 playerList.put(group, new HashSet<>());
             }
 
-            playerList.get(group).add(profile.getName());
+            playerList.get(group).add(profile);
         }
 
         if (isConsole) {
@@ -161,7 +176,16 @@ public final class WhitelistCommand {
             for (var g: groups) {
                 var r = new WhitelistListPlayerGroup(g);
                 for (var p: playerList.get(g)) {
-                    r.addPlayer(p);
+                    var playerResult = playerQueryResult
+                            .stream()
+                            .filter(x -> x.getUuid().equals(p.getId()))
+                            .findFirst();
+                    if (playerResult.isPresent()) {
+                        r.addPlayer(new WhitelistListPlayer(p.getName(), playerResult.get().getLastJoin()));
+                    }
+                    else {
+                        r.addPlayer(new WhitelistListPlayer(p.getName(), -1, -1));
+                    }
                 }
                 response.addPlayerGroup(r);
             }
@@ -175,7 +199,25 @@ public final class WhitelistCommand {
             for (var g: groups) {
                 sb.append(String.format("§6[%s]:§r", g));
                 for (var p: playerList.get(g)) {
-                    sb.append(p);
+                    var playerResult = playerQueryResult
+                            .stream()
+                            .filter(x -> x.getUuid().equals(p.getId()))
+                            .findFirst();
+                    var days = (long) -1;
+                    if (playerResult.isPresent()) {
+                        days = ChronoUnit.DAYS.between(Instant.now(), playerResult.get().getLastJoin());
+                    }
+                    var colorCode = "a";
+                    if (days >= 30) {
+                        colorCode = "c";
+                    }
+                    else if (days >= 7) {
+                        colorCode = "b";
+                    }
+                    else if (days < 0) {
+                        colorCode = "d";
+                    }
+                    sb.append(String.format("%s§%s(%s)§r", p.getName(), colorCode, days));
                     sb.append(';');
                     sb.append(' ');
                 }
