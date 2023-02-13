@@ -20,6 +20,7 @@ public final class NibiruCommands {
                 .build();
         var nibiruConsoleNode = CommandManager
                 .literal("nibiruc")
+                .requires(Permissions.require("nibiru-connector.command", 4))
                 .redirect(nibiruNode)
                 .build();
 
