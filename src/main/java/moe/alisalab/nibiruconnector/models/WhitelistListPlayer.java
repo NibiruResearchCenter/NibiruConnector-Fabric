@@ -19,7 +19,7 @@ public class WhitelistListPlayer {
     public WhitelistListPlayer(String playerName, Instant lastJoin) {
         PlayerName = playerName;
         LastJoin = lastJoin.toEpochMilli();
-        DaysSinceLastJoin = ChronoUnit.DAYS.between(Instant.now(), lastJoin);
+        DaysSinceLastJoin = Math.abs(ChronoUnit.DAYS.between(Instant.now(), lastJoin));
     }
 
     public WhitelistListPlayer(String playerName, long lastJoin, long daysSinceLastJoin) {

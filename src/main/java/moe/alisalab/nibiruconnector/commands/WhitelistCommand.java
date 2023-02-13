@@ -205,7 +205,7 @@ public final class WhitelistCommand {
                             .findFirst();
                     var days = (long) -1;
                     if (playerResult.isPresent()) {
-                        days = ChronoUnit.DAYS.between(Instant.now(), playerResult.get().getLastJoin());
+                        days = Math.abs(ChronoUnit.DAYS.between(Instant.now(), playerResult.get().getLastJoin()));
                     }
                     var colorCode = "a";
                     if (days >= 30) {
