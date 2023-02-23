@@ -19,6 +19,9 @@
       "moe.alisalab.nibiruconnector.NibiruConnector"
     ]
   },
+  "mixins": [
+    "mixin.nibiru-connector.json"
+  ],
   "depends": {
     "fabricloader": ">=0.14.13",
     "fabric": "*",
