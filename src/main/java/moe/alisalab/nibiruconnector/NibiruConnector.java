@@ -10,5 +10,6 @@ public class NibiruConnector implements ModInitializer {
     public void onInitialize() {
         NibiruLogger.info("Hello from Nibiru Connector!");
         NibiruCommands.init();
+        NibiruEvents.init();
     }
 }
