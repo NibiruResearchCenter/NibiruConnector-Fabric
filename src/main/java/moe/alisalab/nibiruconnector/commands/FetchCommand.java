@@ -40,11 +40,11 @@ public final class FetchCommand {
         if (isConsole) {
             var response = new GroupedStringResponse(groups);
             var responseJson = JSON.toJSONString(response);
-            source.sendFeedback(Text.literal(responseJson), false);
+            source.sendFeedback(() -> Text.literal(responseJson), false);
         }
         else {
             var groupedString = String.join(", ", groups);
-            source.sendFeedback(Text.literal(String.format("%s: %s", title, groupedString)), false);
+            source.sendFeedback(() -> Text.literal(String.format("%s: %s", title, groupedString)), false);
         }
 
         return Command.SINGLE_SUCCESS;

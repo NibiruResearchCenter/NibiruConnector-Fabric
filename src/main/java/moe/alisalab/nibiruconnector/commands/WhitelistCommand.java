@@ -88,10 +88,10 @@ public final class WhitelistCommand {
         if (isConsole) {
             var response = new GeneralCommandResponse(String.format("Player %s has been added to whitelist and LP group %s.", player, group));
             var responseJson = JSON.toJSONString(response);
-            source.sendFeedback(Text.literal(responseJson), true);
+            source.sendFeedback(() -> Text.literal(responseJson), true);
         }
         else {
-            source.sendFeedback(Text.literal(String.format("[NBR] Player %s has been added to whitelist and has the node %s.", player, node.getKey())), true);
+            source.sendFeedback(() -> Text.literal(String.format("[NBR] Player %s has been added to whitelist and has the node %s.", player, node.getKey())), true);
         }
         return Command.SINGLE_SUCCESS;
     }
@@ -116,7 +116,7 @@ public final class WhitelistCommand {
         if (isConsole) {
             var response = new GeneralCommandResponse(String.format("Player %s has been removed from whitelist.", player));
             var responseJson = JSON.toJSONString(response);
-            source.sendFeedback(Text.literal(responseJson), true);
+            source.sendFeedback(() -> Text.literal(responseJson), true);
         }
         else {
             source.sendMessage(Text.literal(String.format("[NBR] Player %s has been removed from whitelist.", player)));
@@ -191,7 +191,7 @@ public final class WhitelistCommand {
             }
 
             var responseJson = JSON.toJSONString(response);
-            source.sendFeedback(Text.literal(responseJson), false);
+            source.sendFeedback(() -> Text.literal(responseJson), false);
         }
         else {
             var sb = new StringBuilder();
@@ -228,7 +228,7 @@ public final class WhitelistCommand {
             sb.deleteCharAt(sb.length() - 1);
 
             var msg = sb.toString();
-            source.sendFeedback(Text.literal(msg), false);
+            source.sendFeedback(() -> Text.literal(msg), false);
         }
 
         return Command.SINGLE_SUCCESS;
