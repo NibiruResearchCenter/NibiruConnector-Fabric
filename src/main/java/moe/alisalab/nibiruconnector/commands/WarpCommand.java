@@ -5,9 +5,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import moe.alisalab.nibiruconnector.NibiruLogger;
 import moe.alisalab.nibiruconnector.config.WarpPointsConfigManager;
-import moe.alisalab.nibiruconnector.exceptions.LuckpermApiException;
 import moe.alisalab.nibiruconnector.utils.LuckPermsApi;
 import moe.alisalab.nibiruconnector.utils.WarpCoolDownApi;
 import net.minecraft.server.MinecraftServer;
@@ -40,13 +38,8 @@ public class WarpCommand {
             throw new SimpleCommandExceptionType(Text.literal("Warp point world not found.")).create();
         }
 
-        var bypassCoolDown = false;
-        try {
-            bypassCoolDown = LuckPermsApi.isHasNode(player.getUuid(), "nibiru-connector.settings.warp.no-cool-down");
-        }
-        catch (LuckpermApiException e) {
-            NibiruLogger.warn("LuckPermsApi error: " + e.getMessage());
-        }
+        var permissionCheck = LuckPermsApi.checkPermission(player, "nibiru-connector.settings.warp.no-cool-down");
+        var bypassCoolDown = permissionCheck.asBoolean();
 
         if (!bypassCoolDown) {
             if (coolDownApi.isCoolDown(player.getUuid())) {

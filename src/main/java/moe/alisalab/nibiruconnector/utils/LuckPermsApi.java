@@ -5,7 +5,8 @@ import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.group.Group;
 import net.luckperms.api.model.user.User;
-import net.luckperms.api.node.Node;
+import net.luckperms.api.util.Tristate;
+import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.util.Set;
 import java.util.UUID;
@@ -20,6 +21,11 @@ public final class LuckPermsApi {
         } catch (InterruptedException | ExecutionException e) {
             throw new LuckpermApiException(e.getMessage());
         }
+    }
+
+    public static Tristate checkPermission(ServerPlayerEntity player, String permission) {
+        return API.getPlayerAdapter(ServerPlayerEntity.class).getPermissionData(player)
+                .checkPermission(permission);
     }
 
     public static String getUserGroup(UUID uuid) throws LuckpermApiException {
@@ -43,12 +49,6 @@ public final class LuckPermsApi {
                 .stream()
                 .filter(g -> !g.getName().equals("default"))
                 .toList());
-    }
-
-    public static boolean isHasNode(UUID uuid, String node) throws LuckpermApiException {
-        return getUser(uuid).getDistinctNodes().stream()
-                .filter(Node::getValue)
-                .anyMatch(n -> n.getKey().equals(node));
     }
 
     public static boolean isGroupExist(String group) {
