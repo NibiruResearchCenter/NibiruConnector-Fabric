@@ -1,11 +1,13 @@
 package moe.alisalab.nibiruconnector;
 
 import moe.alisalab.nibiruconnector.commands.FetchCommand;
+import moe.alisalab.nibiruconnector.commands.WarpCommand;
 import moe.alisalab.nibiruconnector.commands.WhitelistCommand;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import moe.alisalab.nibiruconnector.commands.suggestion.LuckpermsGroupSuggestion;
+import moe.alisalab.nibiruconnector.commands.suggestion.WarpPointNameSuggestion;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.argument.GameProfileArgumentType;
 import net.minecraft.server.command.CommandManager;
@@ -31,6 +33,7 @@ public final class NibiruCommands {
 
         addWhitelistCommand(nibiruNode);
         addFetchCommand(nibiruNode);
+        addWarpCommand(nibiruNode);
     }
 
     private static void addWhitelistCommand(LiteralCommandNode<ServerCommandSource> nibiruNode) {
@@ -99,6 +102,56 @@ public final class NibiruCommands {
 
             fetchNode.addChild(fetchGroupNode);
             fetchNode.addChild(fetchWhitelistedPlayerNode);
+        });
+    }
+
+    private static void addWarpCommand(LiteralCommandNode<ServerCommandSource> nibiruNode) {
+        var warpNode = CommandManager
+                .literal("warp")
+                .requires(Permissions.require("nibiru-connector.command.warp", 4))
+                .build();
+
+        var warpToNode = CommandManager
+                .literal("to")
+                .requires(Permissions.require("nibiru-connector.command.warp.to", 4))
+                .then(
+                        CommandManager.argument("name", StringArgumentType.word())
+                                .suggests(new WarpPointNameSuggestion())
+                                .executes(WarpCommand::warpTo)
+                )
+                .build();
+
+        var warpAddNode = CommandManager
+                .literal("add")
+                .requires(Permissions.require("nibiru-connector.command.warp.add", 4))
+                .then(
+                        CommandManager.argument("name", StringArgumentType.word())
+                                .executes(WarpCommand::warpAdd)
+                )
+                .build();
+
+        var warpRemoveNode = CommandManager
+                .literal("remove")
+                .requires(Permissions.require("nibiru-connector.command.warp.remove", 4))
+                .then(
+                        CommandManager.argument("name", StringArgumentType.word())
+                                .executes(WarpCommand::warpRemove)
+                )
+                .build();
+
+        var warpListNode = CommandManager
+                .literal("list")
+                .requires(Permissions.require("nibiru-connector.command.warp.list", 4))
+                .executes(WarpCommand::warpList)
+                .build();
+
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            nibiruNode.addChild(warpNode);
+
+            warpNode.addChild(warpToNode);
+            warpNode.addChild(warpAddNode);
+            warpNode.addChild(warpRemoveNode);
+            warpNode.addChild(warpListNode);
         });
     }
 }
