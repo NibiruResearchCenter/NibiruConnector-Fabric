@@ -1,7 +1,6 @@
 package moe.alisalab.nibiruconnector.config.data;
 
 import com.alibaba.fastjson2.annotation.JSONField;
-import net.minecraft.server.world.ServerWorld;
 
 public class WarpPoint {
     @JSONField(name = "name")

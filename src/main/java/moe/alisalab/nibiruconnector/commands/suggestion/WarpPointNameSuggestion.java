@@ -1,7 +1,6 @@
 package moe.alisalab.nibiruconnector.commands.suggestion;
 
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
@@ -13,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 public class WarpPointNameSuggestion implements SuggestionProvider<ServerCommandSource> {
 
     @Override
-    public CompletableFuture<Suggestions> getSuggestions(CommandContext<ServerCommandSource> context, SuggestionsBuilder builder) throws CommandSyntaxException {
+    public CompletableFuture<Suggestions> getSuggestions(CommandContext<ServerCommandSource> context, SuggestionsBuilder builder) {
         var warpPoints = WarpPointsConfigManager.getInstance().getWarpPointNames();
 
         for (var warpPoint : warpPoints) {
