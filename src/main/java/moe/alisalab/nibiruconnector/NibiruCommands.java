@@ -18,7 +18,6 @@ public final class NibiruCommands {
     public static void init() {
         var nibiruNode = CommandManager
                 .literal("nibiru")
-                .requires(Permissions.require("nibiru-connector.command", 4))
                 .build();
         var nibiruConsoleNode = CommandManager
                 .literal("nibiruc")
@@ -108,12 +107,12 @@ public final class NibiruCommands {
     private static void addWarpCommand(LiteralCommandNode<ServerCommandSource> nibiruNode) {
         var warpNode = CommandManager
                 .literal("warp")
-                .requires(Permissions.require("nibiru-connector.command.warp", 4))
+                .requires(Permissions.require("nibiru-connector.command.warp", 0))
                 .build();
 
         var warpToNode = CommandManager
                 .literal("to")
-                .requires(Permissions.require("nibiru-connector.command.warp.to", 4))
+                .requires(Permissions.require("nibiru-connector.command.warp.to", 2))
                 .then(
                         CommandManager.argument("name", StringArgumentType.word())
                                 .suggests(new WarpPointNameSuggestion())
@@ -141,7 +140,7 @@ public final class NibiruCommands {
 
         var warpListNode = CommandManager
                 .literal("list")
-                .requires(Permissions.require("nibiru-connector.command.warp.list", 4))
+                .requires(Permissions.require("nibiru-connector.command.warp.list", 2))
                 .executes(WarpCommand::warpList)
                 .build();
 
