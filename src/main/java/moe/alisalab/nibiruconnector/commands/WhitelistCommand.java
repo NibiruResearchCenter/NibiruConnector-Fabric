@@ -1,15 +1,10 @@
 package moe.alisalab.nibiruconnector.commands;
 
-import com.alibaba.fastjson2.JSON;
 import com.github.quiltservertools.ledger.utility.PlayerResult;
 import com.mojang.authlib.GameProfile;
 import moe.alisalab.nibiruconnector.NibiruConnectKotlin;
 import moe.alisalab.nibiruconnector.NibiruLogger;
 import moe.alisalab.nibiruconnector.exceptions.LuckpermApiException;
-import moe.alisalab.nibiruconnector.models.GeneralCommandResponse;
-import moe.alisalab.nibiruconnector.models.WhitelistListPlayer;
-import moe.alisalab.nibiruconnector.models.WhitelistListPlayerGroup;
-import moe.alisalab.nibiruconnector.models.WhitelistListResponse;
 import moe.alisalab.nibiruconnector.utils.LuckPermsApi;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -29,15 +24,12 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
-import static moe.alisalab.nibiruconnector.utils.CommandUtils.isFromConsole;
-
 public final class WhitelistCommand {
     public static int addPlayer(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
         var source = ctx.getSource();
         var profile = GameProfileArgumentType.getProfileArgument(ctx, "player").iterator().next();
         var player = profile.getName();
         var group = StringArgumentType.getString(ctx, "group");
-        var isConsole = isFromConsole(ctx);
 
         source.getServer().getPlayerManager().getPlayer("");
 
@@ -85,14 +77,8 @@ public final class WhitelistCommand {
             NibiruLogger.debug("WL-ADD Player %s already has the node %s", player, node.getKey());
         }
 
-        if (isConsole) {
-            var response = new GeneralCommandResponse(String.format("Player %s has been added to whitelist and LP group %s.", player, group));
-            var responseJson = JSON.toJSONString(response);
-            source.sendFeedback(() -> Text.literal(responseJson), true);
-        }
-        else {
-            source.sendFeedback(() -> Text.literal(String.format("[NBR] Player %s has been added to whitelist and has the node %s.", player, node.getKey())), true);
-        }
+        source.sendFeedback(() -> Text.literal(String.format("[NBR] Player %s has been added to whitelist and has the node %s.", player, node.getKey())), true);
+
         return Command.SINGLE_SUCCESS;
     }
 
@@ -100,7 +86,6 @@ public final class WhitelistCommand {
         var source = ctx.getSource();
         var profile = GameProfileArgumentType.getProfileArgument(ctx, "player").iterator().next();
         var player = profile.getName();
-        var isConsole = isFromConsole(ctx);
 
         var isWhitelisted = source.getServer().getPlayerManager().isWhitelisted(profile);
         if (!isWhitelisted) {
@@ -113,20 +98,13 @@ public final class WhitelistCommand {
         }
         source.getServer().kickNonWhitelistedPlayers(source);
 
-        if (isConsole) {
-            var response = new GeneralCommandResponse(String.format("Player %s has been removed from whitelist.", player));
-            var responseJson = JSON.toJSONString(response);
-            source.sendFeedback(() -> Text.literal(responseJson), true);
-        }
-        else {
-            source.sendMessage(Text.literal(String.format("[NBR] Player %s has been removed from whitelist.", player)));
-        }
+        source.sendMessage(Text.literal(String.format("[NBR] Player %s has been removed from whitelist.", player)));
+
         return Command.SINGLE_SUCCESS;
     }
 
     public static int listPlayer(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
         var source = ctx.getSource();
-        var isConsole = isFromConsole(ctx);
 
         var lpUsers = (Set<UUID>)new HashSet<UUID>();
         try {
@@ -170,66 +148,42 @@ public final class WhitelistCommand {
             playerList.get(group).add(profile);
         }
 
-        if (isConsole) {
-            var response = new WhitelistListResponse();
-            var groups = playerList.keySet();
-            for (var g: groups) {
-                var r = new WhitelistListPlayerGroup(g);
-                for (var p: playerList.get(g)) {
-                    var playerResult = playerQueryResult
-                            .stream()
-                            .filter(x -> x.getUuid().equals(p.getId()))
-                            .findFirst();
-                    if (playerResult.isPresent()) {
-                        r.addPlayer(new WhitelistListPlayer(p.getName(), playerResult.get().getLastJoin()));
-                    }
-                    else {
-                        r.addPlayer(new WhitelistListPlayer(p.getName(), -1, -1));
-                    }
+        var sb = new StringBuilder();
+        var groups = playerList.keySet();
+        for (var g: groups) {
+            sb.append(String.format("§6[%s]:§r", g));
+            for (var p: playerList.get(g)) {
+                var playerResult = playerQueryResult
+                        .stream()
+                        .filter(x -> x.getUuid().equals(p.getId()))
+                        .findFirst();
+                var days = (long) -1;
+                if (playerResult.isPresent()) {
+                    days = Math.abs(ChronoUnit.DAYS.between(Instant.now(), playerResult.get().getLastJoin()));
                 }
-                response.addPlayerGroup(r);
-            }
-
-            var responseJson = JSON.toJSONString(response);
-            source.sendFeedback(() -> Text.literal(responseJson), false);
-        }
-        else {
-            var sb = new StringBuilder();
-            var groups = playerList.keySet();
-            for (var g: groups) {
-                sb.append(String.format("§6[%s]:§r", g));
-                for (var p: playerList.get(g)) {
-                    var playerResult = playerQueryResult
-                            .stream()
-                            .filter(x -> x.getUuid().equals(p.getId()))
-                            .findFirst();
-                    var days = (long) -1;
-                    if (playerResult.isPresent()) {
-                        days = Math.abs(ChronoUnit.DAYS.between(Instant.now(), playerResult.get().getLastJoin()));
-                    }
-                    var colorCode = "a";
-                    if (days >= 30) {
-                        colorCode = "c";
-                    }
-                    else if (days >= 7) {
-                        colorCode = "b";
-                    }
-                    else if (days < 0) {
-                        colorCode = "d";
-                    }
-                    sb.append(String.format("%s§%s(%s)§r", p.getName(), colorCode, days));
-                    sb.append(';');
-                    sb.append(' ');
+                var colorCode = "a";
+                if (days >= 30) {
+                    colorCode = "c";
                 }
-                sb.deleteCharAt(sb.length() - 1);
-                sb.deleteCharAt(sb.length() - 1);
+                else if (days >= 7) {
+                    colorCode = "b";
+                }
+                else if (days < 0) {
+                    colorCode = "d";
+                }
+                sb.append(String.format("%s§%s(%s)§r", p.getName(), colorCode, days));
+                sb.append(';');
                 sb.append(' ');
             }
             sb.deleteCharAt(sb.length() - 1);
-
-            var msg = sb.toString();
-            source.sendFeedback(() -> Text.literal(msg), false);
+            sb.deleteCharAt(sb.length() - 1);
+            sb.append(' ');
         }
+
+        sb.deleteCharAt(sb.length() - 1);
+
+        var msg = sb.toString();
+        source.sendFeedback(() -> Text.literal(msg), false);
 
         return Command.SINGLE_SUCCESS;
     }
