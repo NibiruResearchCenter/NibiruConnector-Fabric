@@ -11,8 +11,7 @@ public final class ConfigManager {
         try {
             var path = FabricLoader.getInstance().getConfigDir().resolve("nibiru-connector/" + fileName);
             if (Files.exists(path)) {
-                var data = Files.readString(path);
-                return data;
+                return Files.readString(path);
             }
 
             return "";

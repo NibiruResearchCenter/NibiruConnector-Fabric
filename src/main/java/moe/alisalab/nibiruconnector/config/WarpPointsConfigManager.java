@@ -89,7 +89,7 @@ public class WarpPointsConfigManager {
             return false;
         }
 
-        if (result == "") {
+        if (result.isEmpty()) {
             config = new WarpPointsConfig();
             config.warpPoints = new ArrayList<>();
             return true;
