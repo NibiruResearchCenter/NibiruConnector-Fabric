@@ -4,9 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.annotation.JSONField;
 import moe.alisalab.nibiruconnector.NibiruLogger;
 import moe.alisalab.nibiruconnector.config.data.WarpPoint;
-import net.fabricmc.loader.api.FabricLoader;
 
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,40 +84,23 @@ public class WarpPointsConfigManager {
     }
 
     private boolean loadConfig() {
-        try {
-            var path = FabricLoader.getInstance().getConfigDir().resolve("nibiru-connector/warp-points.json");
-            if (Files.exists(path)) {
-                var json = Files.readString(path);
-                config = JSON.parseObject(json, WarpPointsConfig.class);
-            }
-            else {
-                config = new WarpPointsConfig();
-                config.warpPoints = new ArrayList<>();
-            }
-
-            return true;
-        }
-        catch (Exception e) {
-            NibiruLogger.warn("Failed to load warp points config: " + e.getMessage());
-            e.printStackTrace();
+        var result = ConfigManager.readConfig("warp-points.json");
+        if (result == null) {
             return false;
         }
+
+        if (result == "") {
+            config = new WarpPointsConfig();
+            config.warpPoints = new ArrayList<>();
+            return true;
+        }
+
+        config = JSON.parseObject(result, WarpPointsConfig.class);
+        return true;
     }
 
     private boolean saveConfig() {
-        try {
-            var path = FabricLoader.getInstance().getConfigDir().resolve("nibiru-connector/warp-points.json");
-            if (!Files.exists(path.getParent())) {
-                Files.createDirectories(path.getParent());
-            }
-            var json = JSON.toJSONString(config);
-            Files.writeString(path, json);
-            return true;
-        }
-        catch (Exception e) {
-            NibiruLogger.warn("Failed to save warp points config: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
+        var json = JSON.toJSONString(config);
+        return ConfigManager.writeConfig("warp-points.json", json);
     }
 }
